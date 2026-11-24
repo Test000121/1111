@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
 
 # Copy PHP application
 COPY rx.php /var/www/html/rx.php
+COPY manage.php /var/www/html/manage.php
 
 # Storage directory
 ENV STORE=/tmp/drops
